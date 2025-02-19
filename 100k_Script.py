@@ -1,27 +1,27 @@
 import yfinance as yf
 import pandas as pd
-from datetime import datetime
 
 # Define the tickers
 tickers = ["TCEHY", "HAS", "BBWI", "NWL", "NFLX", "^GSPC"]  # ^GSPC represents the S&P 500
 
 # Loop through each ticker
 for ticker in tickers:
-    # Initialize the ticker
-    stock = yf.Ticker(ticker)
+    # Download historical data for the ticker
+    history = yf.download(ticker, start='2000-01-01', end='2025-02-18')  # Adjust dates as needed
     
-    # Retrieve historical data for the last 1 month
-    history = stock.history(period='1mo')
+    # Ensure the index is a DatetimeIndex
+    if not isinstance(history.index, pd.DatetimeIndex):
+        history.index = pd.to_datetime(history.index)
     
-    # Filter the DataFrame to only include Fridays
-    fridays_df = history[history.index.weekday == 4]
+    # Filter the DataFrame to include only Fridays
+    fridays_df = history[history.index.dayofweek == 4]  # 4 corresponds to Friday
     
-    # Keep only the last 5 Fridays
-    fridays_df = fridays_df.tail(5)
+    # Select only the 'Close' column
+    fridays_close = fridays_df[['Close']]
     
     # Print the DataFrame to verify
-    print(f"Data for {ticker} (Last 5 Fridays):")
-    print(fridays_df)
+    print(f"Friday closing prices for {ticker}:")
+    print(fridays_close)
     
     # Save the filtered DataFrame to a CSV file
-    fridays_df.to_csv(f"{ticker}_fridays.csv", index=True)
+    fridays_close.to_csv(f"{ticker}_closings.csv", index=True)
